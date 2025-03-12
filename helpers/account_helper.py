@@ -1,9 +1,25 @@
+import time
 from json import loads
 
 from services.dm_api_account import DMApiAccount
 from services.api_mailhog import MailHogApi
 
+def retrier(function):
+    def wraper(*args, **kwargs):
+        token = None
+        count = 0
+        while token is None:
+            print(f"Попытка получения токена номер {count}")
+            token = function(*args, **kwargs)
+            count += 1
+            if count == 5:
+                raise AssertionError("Превышено количество попыток активационного токена!")
+            if token:
+                return token
+            time.sleep(1)
 
+
+    return wraper
 
 class AccountHelper:
     def __init__(self, dm_account_api: DMApiAccount, mailhog: MailHogApi):
@@ -21,9 +37,7 @@ class AccountHelper:
 
         response = self.dm_account_api.account_api.post_v1_account(json_data=json_data)
         assert response.status_code == 201, f'Пользователь не был создан {response.json()}'
-        response = self.mailhog.mailhog_api.get_api_v2_messages()
-        assert response.status_code == 200, 'Письма не были получены'
-        token = self.get_activation_token_by_login(login=login, response=response)
+        token = self.get_activation_token_by_login(login=login)
         assert token is not None, f"Токен для пользователя {login} не был получен"
         response = self.dm_account_api.account_api.put_v1_account_token(token=token)
         assert response.status_code == 200, 'Пользователь не был активирован'
@@ -42,37 +56,40 @@ class AccountHelper:
         return response
 
 
-    @staticmethod
-    def get_activation_token_by_login(login, response):
-        token = None
-        for item in response.json()['items']:
-            body = item['Content']['Body']
-
-            # Пытаемся распарсить тело как JSON, но если не получится — ищем вручную
-            try:
-                user_data = loads(body)
-                user_login = user_data.get('Login')
-                if user_login == login:
-                    token = user_data['ConfirmationLinkUrl'].split('/')[-1]
-                    break
-            except ValueError:
-                # Письмо не в формате JSON — ищем ссылку вручную
-                for line in body.splitlines():
-                    if 'ConfirmationLinkUrl' in line:
-                        token = line.split('/')[-1].strip()
-                        break
-
-        if not token:
-            raise ValueError(f'❌ Не удалось найти токен активации для пользователя {login}')
-
-        return token
-
-
-    # def get_activation_token_by_login(login, response):
+    # @retrier
+    # def get_activation_token_by_login(self, login):
     #     token = None
+    #     response = self.mailhog.mailhog_api.get_api_v2_messages()
     #     for item in response.json()['items']:
-    #         user_data = loads(item['Content']['Body'])
-    #         user_login = user_data['Login']
-    #         if user_login == login:
-    #             token = user_data['ConfirmationLinkUrl'].split('/')[-1]
+    #         body = item['Content']['Body']
+    #
+    #         # Пытаемся распарсить тело как JSON, но если не получится — ищем вручную
+    #         try:
+    #             user_data = loads(body)
+    #             user_login = user_data.get('Login') + "!"
+    #             if user_login == login:
+    #                 token = user_data['ConfirmationLinkUrl'].split('/')[-1]
+    #                 break
+    #         except ValueError:
+    #             # Письмо не в формате JSON — ищем ссылку вручную
+    #             for line in body.splitlines():
+    #                 if 'ConfirmationLinkUrl' in line:
+    #                     token = line.split('/')[-1].strip()
+    #                     break
+    #
+    #     if not token:
+    #         raise ValueError(f'❌ Не удалось найти токен активации для пользователя {login}')
+    #
     #     return token
+
+
+    @retrier
+    def get_activation_token_by_login(self, login):
+        token = None
+        response = self.mailhog.mailhog_api.get_api_v2_messages()
+        for item in response.json()['items']:
+            user_data = loads(item['Content']['Body'])
+            user_login = user_data['Login']
+            if user_login == login:
+                token = user_data['ConfirmationLinkUrl'].split('/')[-1]
+        return token
