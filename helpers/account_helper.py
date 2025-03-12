@@ -3,6 +3,64 @@ from json import loads
 
 from services.dm_api_account import DMApiAccount
 from services.api_mailhog import MailHogApi
+from retrying import retry
+from functools import wraps
+
+
+def time_it(func):
+    """
+    Декоратор для измерения времени выполнения
+    Пример использования: @time_it
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        end = time.perf_counter()
+        print(f"{func.__name__} выполнилась за {end - start:.2f} секунд")
+        return result
+    return wrapper
+
+
+# С использованием библиотеки
+def retry_if_exception(exception):
+    """
+    Повторяем попытку, если произошла ошибка активации
+    Пример использования: @retry(stop_max_attempt_number=5, wait_fixed=1000, retry_on_exception=retry_if_exception)
+    """
+
+    return isinstance(exception, AssertionError)
+
+# Самописный, такой же как retry_if_exception
+def retry_on_exception(max_attempts=5, delay=1):
+    """
+    Декоратор для повторных попыток выполнения функции при исключениях
+    Пример использования: @retry_on_exception(max_attempts=5, delay=1)
+
+    """
+    def decorator(function):
+        @wraps(function)
+        def wrapper(*args, **kwargs):
+            for attempt in range(1, max_attempts + 1):
+                try:
+                    print(f"Попытка {attempt} из {max_attempts}")
+                    return function(*args, **kwargs)
+                except AssertionError as e:
+                    print(f"Ошибка: {e}")
+                    if attempt == max_attempts:
+                        raise
+                    time.sleep(delay)
+        return wrapper
+    return decorator
+
+
+
+
+
+def retry_if_result_none(result):
+    """Return True if we should retry (in this case when result is None), False otherwise"""
+    return result is None
+
 
 def retrier(function):
     def wraper(*args, **kwargs):
@@ -26,7 +84,8 @@ class AccountHelper:
         self.dm_account_api = dm_account_api
         self.mailhog = mailhog
 
-
+    @time_it
+    @retry_on_exception(max_attempts=5, delay=1)
     def register_new_user(self, login: str, password: str, email: str):
 
         json_data = {
@@ -44,7 +103,7 @@ class AccountHelper:
         return response
 
 
-    def user_login(self, login: str, password:str, rememder_me: bool = True):
+    def user_login(self, login: str, password: str, rememder_me: bool = True):
         json_data = {
             'login': login,
             'password': password,
@@ -83,7 +142,7 @@ class AccountHelper:
     #     return token
 
 
-    @retrier
+    @retry(stop_max_attempt_number=5, retry_on_result=retry_if_result_none, wait_fixed=1000)
     def get_activation_token_by_login(self, login):
         token = None
         response = self.mailhog.mailhog_api.get_api_v2_messages()
