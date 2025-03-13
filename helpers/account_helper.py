@@ -84,8 +84,7 @@ class AccountHelper:
         self.dm_account_api = dm_account_api
         self.mailhog = mailhog
 
-    @time_it
-    @retry_on_exception(max_attempts=5, delay=1)
+
     def register_new_user(self, login: str, password: str, email: str):
 
         json_data = {
@@ -113,34 +112,6 @@ class AccountHelper:
 
         assert response.status_code == 200, 'Пользователь не смог авторизоваться'
         return response
-
-
-    # @retrier
-    # def get_activation_token_by_login(self, login):
-    #     token = None
-    #     response = self.mailhog.mailhog_api.get_api_v2_messages()
-    #     for item in response.json()['items']:
-    #         body = item['Content']['Body']
-    #
-    #         # Пытаемся распарсить тело как JSON, но если не получится — ищем вручную
-    #         try:
-    #             user_data = loads(body)
-    #             user_login = user_data.get('Login') + "!"
-    #             if user_login == login:
-    #                 token = user_data['ConfirmationLinkUrl'].split('/')[-1]
-    #                 break
-    #         except ValueError:
-    #             # Письмо не в формате JSON — ищем ссылку вручную
-    #             for line in body.splitlines():
-    #                 if 'ConfirmationLinkUrl' in line:
-    #                     token = line.split('/')[-1].strip()
-    #                     break
-    #
-    #     if not token:
-    #         raise ValueError(f'❌ Не удалось найти токен активации для пользователя {login}')
-    #
-    #     return token
-
 
     @retry(stop_max_attempt_number=5, retry_on_result=retry_if_result_none, wait_fixed=1000)
     def get_activation_token_by_login(self, login):
