@@ -1,4 +1,31 @@
+from json import loads
+
 import requests
+
+
+def get_activation_token_by_login(login, response):
+    token = None
+    for item in response.json()['items']:
+        body = item['Content']['Body']
+
+        # Пытаемся распарсить тело как JSON, но если не получится — ищем вручную
+        try:
+            user_data = loads(body)
+            user_login = user_data.get('Login')
+            if user_login == login:
+                token = user_data['ConfirmationLinkUrl'].split('/')[-1]
+                break
+        except ValueError:
+            # Письмо не в формате JSON — ищем ссылку вручную
+            for line in body.splitlines():
+                if 'ConfirmationLinkUrl' in line:
+                    token = line.split('/')[-1].strip()
+                    break
+
+    if not token:
+        raise ValueError(f'❌ Не удалось найти токен активации для пользователя {login}')
+
+    return token
 
 class ApiClient:
     """Клиент для работы с API сервера."""
