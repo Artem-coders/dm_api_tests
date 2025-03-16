@@ -79,6 +79,7 @@ def retrier(function):
 
     return wraper
 
+
 class AccountHelper:
     def __init__(self, dm_account_api: DMApiAccount, mailhog: MailHogApi):
         self.dm_account_api = dm_account_api
@@ -86,17 +87,63 @@ class AccountHelper:
 
 
     def auth_client(self, login: str, password: str):
-
         response = self.dm_account_api.login_api.post_v1_account_login(json_data={'login': login, 'password': password})
         token = {"x-dm-auth-token": response.headers["x-dm-auth-token"]}
         self.dm_account_api.account_api.set_headers(token)
         self.dm_account_api.login_api.set_headers(token)
 
-    def client_token(self, token):
-        response = self.dm_account_api.account_api.get_v1_account(headers={"x-dm-auth-token": token})
+
+    def client_token(self, login: str, password: str):
+        # Авторизация пользователя и получение токена
+        response = self.user_login(login=login, password=password)
+        assert response.status_code == 200, f"Не удалось сбросить пароль. Ответ: {response.text}"
+        # Получение токена из ответа
+        token = response.headers.get("x-dm-auth-token")
+        assert token, "Токен авторизации не был получен после входа в систему"
+        # Устанавливаем токен в заголовки
+        response = self.dm_account_api.account_api.get_v1_account(headers={"X-Dm-Auth-Token": token})
         token = {"x-dm-auth-token": response.headers["x-dm-auth-token"]}
         self.dm_account_api.account_api.set_headers(token)
-        self.dm_account_api.login_api.set_headers(token)
+        # Получаем данные аккаунта
+        response = self.dm_account_api.account_api.get_v1_account()
+        assert response.status_code == 200
+        json_data = response.json()
+        assert "login" in json_data["resource"]
+        assert json_data["resource"]["login"] == login
+
+
+    def post_password(self, login: str, email: str, password: str):
+        # Авторизация пользователя и получение токена
+        response = self.user_login(login=login, password=password)
+        assert response.status_code == 200, f"Не удалось сбросить пароль. Ответ: {response.text}"
+        token = response.headers.get("x-dm-auth-token")
+        assert token, "Токен авторизации не был получен после входа в систему"
+
+        # Установка токена в заголовки
+        self.dm_account_api.account_api.set_headers({"x-dm-auth-token": token})
+
+        # Сбрасываем пароль
+        json_data = {
+            'login': login,
+            'email': email
+        }
+        response = self.dm_account_api.account_api.post_v1_account_password(json_data=json_data)
+        assert response.status_code == 200, f"Не удалось поменять пароль. Ответ: {response.text}"
+        return response
+
+    def change_password(self, login: str, old_password: str, new_password: str, token: str = None):
+        if not token:
+            token = self.get_token_by_password(login=login)
+            assert token is not None, f"Токен для пользователя {login} не был получен"
+        json_data = {
+            'login': login,
+            'token': token,
+            'oldPassword': old_password,
+            'newPassword': new_password
+        }
+        response = self.dm_account_api.account_api.put_v1_account_password(json_data=json_data)
+        assert response.status_code == 200, 'Пароль не поменялся'
+        return response
 
     def register_new_user(self, login: str, password: str, email: str):
 
@@ -137,12 +184,23 @@ class AccountHelper:
                 token = user_data['ConfirmationLinkUrl'].split('/')[-1]
         return token
 
-    def get_token_by_login(self, login):
+    @retry(stop_max_attempt_number=5, retry_on_result=retry_if_result_none, wait_fixed=1000)
+    def get_token_by_password(self, login):
         token = None
         response = self.mailhog.mailhog_api.get_api_v2_messages()
         for item in response.json()['items']:
+            print(item)
             user_data = loads(item['Content']['Body'])
+            print(f"Письмо: {user_data}")
             user_login = user_data['Login']
             if user_login == login:
-                token = user_data['ConfirmationLinkUrl'].split('/')[-1]
+                token = user_data.get('ConfirmationLinkUri')
+                if token:
+                    token = token.split('/')[-1]
+                    break
+                else:
+                    print(f"ConfirmationLinkUri не найден в письме для пользователя {login}")
+        if token is None:
+            print(f"Токен не найден для пользователя {login}")
+
         return token

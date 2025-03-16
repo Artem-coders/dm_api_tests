@@ -1,6 +1,9 @@
 from collections import namedtuple
 from datetime import datetime
 from json import loads
+import random
+import string
+
 
 import pytest
 
@@ -47,21 +50,24 @@ def auth_account_helper(mailhog_api):
     return account_helper
 
 
-@pytest.fixture(scope='session')
-def account_helper_get_token(mailhog_api):
-    dm_api_configuration = DmApiConfiguration(host='http://5.63.153.31:5051', disable_log=False)
-    account = DMApiAccount(configuration=dm_api_configuration)
-    account_helper = AccountHelper(dm_account_api=account, mailhog=mailhog_api)
-    return account_helper
-
-
 @pytest.fixture
 def prepare_user():
     now = datetime.now()
-    data = now.strftime("%d_%m_%Y_%H_%M%_%S")
+    data = now.strftime("%d_%m_%Y_%H_%M_%S")
     login = f'Good_{data}'
     password = '123456789'
     email = f'{login}@mail.ru'
+    # namedtuple хранения данных пользователя
     User = namedtuple("User", ["login", "password", "email"])
     user = User(login=login, password=password, email=email)
     return user
+
+
+@pytest.fixture
+def prepare_password():
+    # Генерация случайного пароля длиной 9 символов
+    password = ''.join(random.choices(string.ascii_letters + string.digits, k=9))
+    User = namedtuple("User", ["password"])
+    user = User(password=password)
+    return user
+
