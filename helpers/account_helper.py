@@ -92,6 +92,12 @@ class AccountHelper:
         self.dm_account_api.account_api.set_headers(token)
         self.dm_account_api.login_api.set_headers(token)
 
+    def client_token(self, token):
+        response = self.dm_account_api.account_api.get_v1_account(headers={"x-dm-auth-token": token})
+        token = {"x-dm-auth-token": response.headers["x-dm-auth-token"]}
+        self.dm_account_api.account_api.set_headers(token)
+        self.dm_account_api.login_api.set_headers(token)
+
     def register_new_user(self, login: str, password: str, email: str):
 
         json_data = {
@@ -122,6 +128,16 @@ class AccountHelper:
 
     @retry(stop_max_attempt_number=5, retry_on_result=retry_if_result_none, wait_fixed=1000)
     def get_activation_token_by_login(self, login):
+        token = None
+        response = self.mailhog.mailhog_api.get_api_v2_messages()
+        for item in response.json()['items']:
+            user_data = loads(item['Content']['Body'])
+            user_login = user_data['Login']
+            if user_login == login:
+                token = user_data['ConfirmationLinkUrl'].split('/')[-1]
+        return token
+
+    def get_token_by_login(self, login):
         token = None
         response = self.mailhog.mailhog_api.get_api_v2_messages()
         for item in response.json()['items']:
