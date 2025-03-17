@@ -116,11 +116,8 @@ class AccountHelper:
         # Авторизация пользователя и получение токена
         response = self.user_login(login=login, password=password)
         assert response.status_code == 200, f"Не удалось сбросить пароль. Ответ: {response.text}"
-        token = response.headers.get("x-dm-auth-token")
-        assert token, "Токен авторизации не был получен после входа в систему"
-
-        # Установка токена в заголовки
-        self.dm_account_api.account_api.set_headers({"x-dm-auth-token": token})
+        token = {"x-dm-auth-token": response.headers["x-dm-auth-token"]}
+        self.dm_account_api.login_api.set_headers(token)
 
         # Сбрасываем пароль
         json_data = {
@@ -144,6 +141,31 @@ class AccountHelper:
         response = self.dm_account_api.account_api.put_v1_account_password(json_data=json_data)
         assert response.status_code == 200, 'Пароль не поменялся'
         return response
+
+    def delete_user(self, login: str, password: str):
+        # Авторизация пользователя и получение токена
+        response = self.user_login(login=login, password=password)
+        assert response.status_code == 200, f"'Пользователь не смог авторизоваться'. Ответ: {response.text}"
+        token = {"x-dm-auth-token": response.headers["x-dm-auth-token"]}
+        self.dm_account_api.login_api.set_headers(token)
+        # Разлогин пользователя
+        response = self.dm_account_api.login_api.delete_v1_account_login()
+        assert response.status_code == 204, f"Не удалось разлогиниться. Ответ: {response.text}"
+        # Разлогин пользователя
+        return response
+
+    def delete_all_user(self, login: str, password: str):
+        # Авторизация пользователя и получение токена
+        response = self.user_login(login=login, password=password)
+        assert response.status_code == 200, f"'Пользователь не смог авторизоваться'. Ответ: {response.text}"
+        token = {"x-dm-auth-token": response.headers["x-dm-auth-token"]}
+        self.dm_account_api.login_api.set_headers(token)
+        # Разлогин пользователя
+        response = self.dm_account_api.login_api.delete_v1_account_login_all()
+        assert response.status_code == 204, f"Не удалось разлогиниться. Ответ: {response.text}"
+        # Разлогин пользователя
+        return response
+
 
     def register_new_user(self, login: str, password: str, email: str):
 
