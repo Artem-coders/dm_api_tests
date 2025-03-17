@@ -16,16 +16,9 @@ class AccountHelper:
 
     @staticmethod
     def prepare_user_data():
-        # Генерация случайного логина
         login = f"PAS_{random.randint(1000, 9999)}"
-
-        # Генерация случайного пароля длиной 9 символов
         password = ''.join(random.choices(string.ascii_letters + string.digits, k=9))
-
-        # Формирование email
         email = f'{login}@mail.ru'
-
-        # Создание namedtuple с данными пользователя
         User = namedtuple("User", ["login", "password", "email"])
         return User(login=login, password=password, email=email)
 
