@@ -25,8 +25,15 @@ def test_post_v1_account():
     account = DMApiAccount(configuration=dm_api_configuration)
     mailhog = MailHogApi(configuration=mailhog_configuration)
     account_helper = AccountHelper(dm_account_api=account, mailhog=mailhog)
-    login = 'Kydra_17'
-    password = '123456789'
-    email = f'{login}@mail.ru'
-    account_helper.register_new_user(login=login, password=password, email=email)
-    account_helper.user_login(login=login, password=password)
+    user_data = account_helper.prepare_user_data()
+
+    account_helper.register_new_user(
+        login=user_data.login,
+        password=user_data.password,
+        email=user_data.email
+    )
+
+    account_helper.user_login(
+        login=user_data.login,
+        password=user_data.password
+    )
