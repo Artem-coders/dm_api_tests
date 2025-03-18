@@ -6,9 +6,12 @@ def test_put_v1_account_password(account_helper, prepare_user, prepare_password)
     old_password = password
     new_password = prepare_password.password
     account_helper.register_new_user(login=login, password=password, email=email)
-    # Вызов метода для сброса пароля
-    account_helper.post_password(login=login, password=password, email=email)
-    # Вызов метода для смены пароля
-    account_helper.change_password(login=login, old_password=old_password, new_password=new_password)
-    # Повторная авторизация с новым паролем для проверки
+    response = account_helper.user_login(login=login, password=password)
+    account_helper.change_password(
+        login=login,
+        old_password=old_password,
+        new_password=new_password,
+        email=email,
+        response=response
+    )
     account_helper.user_login(login=login, password=new_password)
