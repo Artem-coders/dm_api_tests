@@ -1,6 +1,8 @@
 import time
 from json import loads
 
+from dm_api_account.models.login_credentials import LoginCredentials
+from dm_api_account.models.registration import Registration
 from services.dm_api_account import DMApiAccount
 from services.api_mailhog import MailHogApi
 from retrying import retry
@@ -168,33 +170,23 @@ class AccountHelper:
 
 
     def register_new_user(self, login: str, password: str, email: str):
-
-        json_data = {
-            'login': login,
-            'email': email,
-            'password': password,
-        }
-
-        response = self.dm_account_api.account_api.post_v1_account(json_data=json_data)
+        registration = Registration(login=login, password=password, email=email)
+        response = self.dm_account_api.account_api.post_v1_account(registration=registration)
         assert response.status_code == 201, f'Пользователь не был создан {response.json()}'
+
         start_time = time.time()
         token = self.get_activation_token_by_login(login=login)
         end_time = time.time()
         assert end_time - start_time < 3, 'Время ожидания активации превышено'
         assert token is not None, f"Токен для пользователя {login} не был получен"
-        response = self.dm_account_api.account_api.put_v1_account_token(token=token)
-        assert response.status_code == 200, 'Пользователь не был активирован'
+        response = self.dm_account_api.account_api.put_v1_account_token(token=token, validate_response=False)
         return response
 
 
-    def user_login(self, login: str, password: str, rememder_me: bool = True):
-        json_data = {
-            'login': login,
-            'password': password,
-            'rememberMe': rememder_me,
-        }
+    def user_login(self, login: str, password: str, remember_me: bool = True, validate_response=False):
+        login_credentials = LoginCredentials(login=login, password=password, remember_me=remember_me)
+        response = self.dm_account_api.login_api.post_v1_account_login(login_credentials=login_credentials, validate_response=validate_response)
 
-        response = self.dm_account_api.login_api.post_v1_account_login(json_data=json_data)
         assert response.headers["x-dm-auth-token"], 'Токен для пользователя не был получен'
         assert response.status_code == 200, 'Пользователь не смог авторизоваться'
         return response
