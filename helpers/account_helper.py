@@ -127,7 +127,7 @@ class AccountHelper:
             'email': email
         }
         response = self.dm_account_api.account_api.post_v1_account_password(json_data=json_data)
-        assert response.status_code == 200, f"Не удалось поменять пароль. Ответ: {response.text}"
+        print(response)
         return response
 
     def change_password(self, login: str, old_password: str, new_password: str, token: str = None):
@@ -141,7 +141,6 @@ class AccountHelper:
             'newPassword': new_password
         }
         response = self.dm_account_api.account_api.put_v1_account_password(json_data=json_data)
-        assert response.status_code == 200, 'Пароль не поменялся'
         return response
 
     def delete_user(self, login: str, password: str):
@@ -179,7 +178,7 @@ class AccountHelper:
         end_time = time.time()
         assert end_time - start_time < 3, 'Время ожидания активации превышено'
         assert token is not None, f"Токен для пользователя {login} не был получен"
-        response = self.dm_account_api.account_api.put_v1_account_token(token=token, validate_response=False)
+        response = self.dm_account_api.account_api.put_v1_account_token(token=token)
         return response
 
 

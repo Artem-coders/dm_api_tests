@@ -1,10 +1,12 @@
 # Авторизованный клиент
 def test_get_v1_account_auth(auth_account_helper):
-    auth_account_helper.dm_account_api.account_api.get_v1_account()
+    response = auth_account_helper.dm_account_api.account_api.get_v1_account()
+    print(response)
 
 # Не авторизованный клиент
 def test_get_v1_account_no_auth(account_helper):
-    account_helper.dm_account_api.account_api.get_v1_account()
+    response = account_helper.dm_account_api.account_api.get_v1_account(validate_response=False)
+    print(response)
 
 
 def test_get_v1_account_with_token(account_helper, prepare_user):

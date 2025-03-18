@@ -4,4 +4,7 @@
     <option name="sdkName" value="Python 3.12 (dm_api_tests)" />
   </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.12 (dm_api_tests)" project-jdk-type="Python SDK" />
+  <component name="PythonCompatibilityInspectionAdvertiser">
+    <option name="version" value="3" />
+  </component>
 </project>
