@@ -112,13 +112,10 @@ class AccountHelper:
         assert json_data["resource"]["login"] == login
 
 
-    def change_password(self, login: str, old_password: str, new_password: str, email: str, response=None, token: str = None):
+    def change_password(self, login: str, old_password: str, new_password: str, email: str, x_dm_auth_token: str, token: str = None):
 
-        if response is None:
-            response = self.user_login
-
-        x_dm_auth_token = response.headers.get("x-dm-auth-token")
-        assert x_dm_auth_token, "Токен отсутствует в заголовках ответа"
+        assert x_dm_auth_token, "Токен обязателен для разлогина"
+        self.dm_account_api.login_api.set_headers({"x-dm-auth-token": x_dm_auth_token})
 
         self.dm_account_api.login_api.set_headers({"x-dm-auth-token": x_dm_auth_token})
 
