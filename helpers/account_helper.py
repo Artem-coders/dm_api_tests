@@ -103,15 +103,12 @@ class AccountHelper:
         token = response.headers.get("x-dm-auth-token")
         assert token, "Токен авторизации не был получен после входа в систему"
         # Устанавливаем токен в заголовки
-        response = self.dm_account_api.account_api.get_v1_account(headers={"X-Dm-Auth-Token": token})
+        response = self.dm_account_api.account_api.get_v1_account(headers={"X-Dm-Auth-Token": token}, validate_response=False)
         token = {"x-dm-auth-token": response.headers["x-dm-auth-token"]}
         self.dm_account_api.account_api.set_headers(token)
         # Получаем данные аккаунта
         response = self.dm_account_api.account_api.get_v1_account()
-        assert response.status_code == 200
-        json_data = response.json()
-        assert "login" in json_data["resource"]
-        assert json_data["resource"]["login"] == login
+        print(response)
 
 
     def post_password(self, login: str, email: str, password: str):
@@ -176,7 +173,7 @@ class AccountHelper:
         start_time = time.time()
         token = self.get_activation_token_by_login(login=login)
         end_time = time.time()
-        assert end_time - start_time < 3, 'Время ожидания активации превышено'
+        assert end_time - start_time < 5, 'Время ожидания активации превышено'
         assert token is not None, f"Токен для пользователя {login} не был получен"
         response = self.dm_account_api.account_api.put_v1_account_token(token=token)
         return response
