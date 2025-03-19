@@ -117,8 +117,6 @@ class AccountHelper:
         assert x_dm_auth_token, "Токен обязателен для разлогина"
         self.dm_account_api.login_api.set_headers({"x-dm-auth-token": x_dm_auth_token})
 
-        self.dm_account_api.login_api.set_headers({"x-dm-auth-token": x_dm_auth_token})
-
         json_data = {
             'login': login,
             'email': email
