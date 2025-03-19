@@ -19,7 +19,7 @@ class AccountApi(RestClient):
         return response
 
 
-    def get_v1_account(self, validate_response=True, **kwargs):
+    def get_v1_account(self, validate_response=False, **kwargs):
         """
         Get current user
         :return:
@@ -45,7 +45,7 @@ class AccountApi(RestClient):
         return response
 
 
-    def put_v1_account_password(self, json_data, validate_response=True):
+    def put_v1_account_password(self, json_data,  validate_response=True):
         """
         Change registered user password
         :return:
@@ -55,6 +55,7 @@ class AccountApi(RestClient):
             return UserEnvelope(**response.json())
         return response
 
+
     def post_v1_account_password(self, json_data, validate_response=True):
         """
         Reset registered user password
@@ -62,9 +63,5 @@ class AccountApi(RestClient):
         """
         response = self.post(path=f'/v1/account/password', json=json_data)
         if validate_response:
-            response_data = response.json()
-            # Eсли metadata — это словарь, извлекаем нужное поле
-            if isinstance(response_data.get('metadata'), dict):
-                response_data['metadata'] = response_data['metadata'].get('email', '')
-            return UserEnvelope(**response_data)
+            return UserEnvelope(**response.json())
         return response

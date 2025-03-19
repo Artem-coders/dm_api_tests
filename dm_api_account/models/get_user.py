@@ -1,14 +1,9 @@
 from __future__ import annotations
 from dm_api_account.models.user_envelope import UserRole, Rating
 from typing import List, Optional
-from pydantic import BaseModel, Field, root_validator, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict
 
 
-@root_validator(pre=True)
-def check_info(cls, values):
-    if 'info' in values and values['info'] == '':
-        values['info'] = None  # Заменяем пустую строку на None
-    return values
 
 class Info(BaseModel):
     value: str = Field(None, alias='value')

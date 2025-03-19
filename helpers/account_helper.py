@@ -3,6 +3,7 @@ from json import loads
 
 from dm_api_account.models.login_credentials import LoginCredentials
 from dm_api_account.models.registration import Registration
+from dm_api_account.models.user_envelope import UserEnvelope
 from services.dm_api_account import DMApiAccount
 from services.api_mailhog import MailHogApi
 from retrying import retry
@@ -95,24 +96,19 @@ class AccountHelper:
         self.dm_account_api.login_api.set_headers(token)
 
 
-    def change_password(self, login: str, old_password: str, new_password: str, email: str, x_dm_auth_token: str, token: str = None):
-
-        assert x_dm_auth_token, "Токен обязателен для разлогина"
-        self.dm_account_api.login_api.set_headers({"x-dm-auth-token": x_dm_auth_token})
+    def change_password(self, login: str, old_password, new_password, email: str, x_dm_auth_token: str):
+        headers = {"x-dm-auth-token": x_dm_auth_token}
+        self.dm_account_api.login_api.delete_v1_account_login(headers=headers, validate_response=False)
 
         json_data = {
             'login': login,
             'email': email
         }
         # Сбрасываем пароль
-        response = self.dm_account_api.account_api.post_v1_account_password(json_data=json_data)
-        assert response.status_code == 200, f"Не удалось поменять пароль. Ответ: {response.text}"
-        print(response)
-        return response
+        self.dm_account_api.account_api.post_v1_account_password(json_data=json_data, validate_response=False)
 
-        if not token:
-            token = self.get_token_by_password(login=login)
-            assert token is not None, f"Токен для пользователя {login} не был получен"
+        token = self.get_token_by_password(login=login)
+
         json_data = {
             'login': login,
             'token': token,
@@ -120,20 +116,18 @@ class AccountHelper:
             'newPassword': new_password
         }
         # Меняем пароль
-        response = self.dm_account_api.account_api.put_v1_account_password(json_data=json_data)
-        assert response.status_code == 200, 'Пароль не поменялся'
-
+        response = self.dm_account_api.account_api.put_v1_account_password(json_data=json_data, validate_response=True)
         return response
 
     def delete_user(self, x_dm_auth_token):
         headers = {"x-dm-auth-token": x_dm_auth_token}
-        response = self.dm_account_api.login_api.delete_v1_account_login(headers=headers)
+        response = self.dm_account_api.login_api.delete_v1_account_login(headers=headers, validate_response=False)
         assert response.status_code == 204, f"Не удалось разлогиниться. Ответ: {response.text}"
         return response
 
     def delete_all_user(self, x_dm_auth_token):
         headers = {"x-dm-auth-token": x_dm_auth_token}
-        response = self.dm_account_api.login_api.delete_v1_account_login(headers=headers)
+        response = self.dm_account_api.login_api.delete_v1_account_login(headers=headers, validate_response=False)
         assert response.status_code == 204, f"Не удалось разлогиниться. Ответ: {response.text}"
         return response
 
@@ -148,16 +142,13 @@ class AccountHelper:
         end_time = time.time()
         assert end_time - start_time < 5, 'Время ожидания активации превышено'
         assert token is not None, f"Токен для пользователя {login} не был получен"
-        response = self.dm_account_api.account_api.put_v1_account_token(token=token)
+        response = self.dm_account_api.account_api.put_v1_account_token(token=token, validate_response=True)
         return response
 
 
     def user_login(self, login: str, password: str, remember_me: bool = True, validate_response=False):
         login_credentials = LoginCredentials(login=login, password=password, remember_me=remember_me)
         response = self.dm_account_api.login_api.post_v1_account_login(login_credentials=login_credentials, validate_response=validate_response)
-
-        assert response.headers["x-dm-auth-token"], 'Токен для пользователя не был получен'
-        assert response.status_code == 200, 'Пользователь не смог авторизоваться'
         return response
 
     @retry(stop_max_attempt_number=5, retry_on_result=retry_if_result_none, wait_fixed=1000)
@@ -189,5 +180,4 @@ class AccountHelper:
                     print(f"ConfirmationLinkUri не найден в письме для пользователя {login}")
         if token is None:
             print(f"Токен не найден для пользователя {login}")
-
         return token

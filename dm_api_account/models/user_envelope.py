@@ -9,9 +9,9 @@ class UserRole(str, Enum):
     GUEST = "Guest"
     PLAYER = "Player"
     ADMINISTRATOR = "Administrator"
-    NANNYMODERATOR = "NannyModerator"
-    REGULARMODERATOR = "RegularModerator"
-    SENIORMODERATOR = "SeniorModerator"
+    NANNY_MODERATOR = "NannyModerator"
+    REGULAR_MODERATOR = "RegularModerator"
+    SENIOR_MODERATOR = "SeniorModerator"
 
 
 class Rating(BaseModel):
