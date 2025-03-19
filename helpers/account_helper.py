@@ -95,39 +95,21 @@ class AccountHelper:
         self.dm_account_api.login_api.set_headers(token)
 
 
-    def client_token(self, login: str, password: str):
-        # Авторизация пользователя и получение токена
-        response = self.user_login(login=login, password=password)
-        assert response.status_code == 200, f"Не удалось сбросить пароль. Ответ: {response.text}"
-        # Получение токена из ответа
-        token = response.headers.get("x-dm-auth-token")
-        assert token, "Токен авторизации не был получен после входа в систему"
-        # Устанавливаем токен в заголовки
-        response = self.dm_account_api.account_api.get_v1_account(headers={"X-Dm-Auth-Token": token}, validate_response=False)
-        token = {"x-dm-auth-token": response.headers["x-dm-auth-token"]}
-        self.dm_account_api.account_api.set_headers(token)
-        # Получаем данные аккаунта
-        response = self.dm_account_api.account_api.get_v1_account()
-        print(response)
+    def change_password(self, login: str, old_password: str, new_password: str, email: str, x_dm_auth_token: str, token: str = None):
 
+        assert x_dm_auth_token, "Токен обязателен для разлогина"
+        self.dm_account_api.login_api.set_headers({"x-dm-auth-token": x_dm_auth_token})
 
-    def post_password(self, login: str, email: str, password: str):
-        # Авторизация пользователя и получение токена
-        response = self.user_login(login=login, password=password)
-        assert response.status_code == 200, f"Не удалось сбросить пароль. Ответ: {response.text}"
-        token = {"x-dm-auth-token": response.headers["x-dm-auth-token"]}
-        self.dm_account_api.login_api.set_headers(token)
-
-        # Сбрасываем пароль
         json_data = {
             'login': login,
             'email': email
         }
+        # Сбрасываем пароль
         response = self.dm_account_api.account_api.post_v1_account_password(json_data=json_data)
+        assert response.status_code == 200, f"Не удалось поменять пароль. Ответ: {response.text}"
         print(response)
         return response
 
-    def change_password(self, login: str, old_password: str, new_password: str, token: str = None):
         if not token:
             token = self.get_token_by_password(login=login)
             assert token is not None, f"Токен для пользователя {login} не был получен"
@@ -137,31 +119,22 @@ class AccountHelper:
             'oldPassword': old_password,
             'newPassword': new_password
         }
+        # Меняем пароль
         response = self.dm_account_api.account_api.put_v1_account_password(json_data=json_data)
+        assert response.status_code == 200, 'Пароль не поменялся'
+
         return response
 
-    def delete_user(self, login: str, password: str):
-        # Авторизация пользователя и получение токена
-        response = self.user_login(login=login, password=password)
-        assert response.status_code == 200, f"'Пользователь не смог авторизоваться'. Ответ: {response.text}"
-        token = {"x-dm-auth-token": response.headers["x-dm-auth-token"]}
-        self.dm_account_api.login_api.set_headers(token)
-        # Разлогин пользователя
-        response = self.dm_account_api.login_api.delete_v1_account_login()
+    def delete_user(self, x_dm_auth_token):
+        headers = {"x-dm-auth-token": x_dm_auth_token}
+        response = self.dm_account_api.login_api.delete_v1_account_login(headers=headers)
         assert response.status_code == 204, f"Не удалось разлогиниться. Ответ: {response.text}"
-        # Разлогин пользователя
         return response
 
-    def delete_all_user(self, login: str, password: str):
-        # Авторизация пользователя и получение токена
-        response = self.user_login(login=login, password=password)
-        assert response.status_code == 200, f"'Пользователь не смог авторизоваться'. Ответ: {response.text}"
-        token = {"x-dm-auth-token": response.headers["x-dm-auth-token"]}
-        self.dm_account_api.login_api.set_headers(token)
-        # Разлогин пользователя
-        response = self.dm_account_api.login_api.delete_v1_account_login_all()
+    def delete_all_user(self, x_dm_auth_token):
+        headers = {"x-dm-auth-token": x_dm_auth_token}
+        response = self.dm_account_api.login_api.delete_v1_account_login(headers=headers)
         assert response.status_code == 204, f"Не удалось разлогиниться. Ответ: {response.text}"
-        # Разлогин пользователя
         return response
 
 
