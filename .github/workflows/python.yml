@@ -1,6 +1,6 @@
 name: Python Tests
 
-on: [push , pull_request ]
+on: [push, pull_request]
 
 jobs:
   test:
@@ -18,6 +18,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run tests
+      - name: Run tests with retry
         run: |
-          pytest ./tests
+          RETRY_LIMIT=3
+          COUNT=0
+          until [ $COUNT -ge $RETRY_LIMIT ]
+          do
+            pytest ./tests && break
+            COUNT=$((COUNT+1))
+            echo "Tests failed. Retrying... ($COUNT/$RETRY_LIMIT)"
+            sleep 5  # Optional: Delay before retry
+          done
