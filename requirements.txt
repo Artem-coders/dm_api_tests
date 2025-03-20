@@ -9,6 +9,7 @@ pluggy==1.5.0
 pydantic==2.10.6
 pydantic_core==2.27.2
 pydentic==0.0.1.dev3
+PyHamcrest==2.1.0
 pytest==8.3.5
 python-stdnum==1.20
 requests==2.32.3
