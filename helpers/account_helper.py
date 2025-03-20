@@ -3,7 +3,6 @@ from json import loads
 
 from dm_api_account.models.login_credentials import LoginCredentials
 from dm_api_account.models.registration import Registration
-from dm_api_account.models.user_envelope import UserEnvelope
 from services.dm_api_account import DMApiAccount
 from services.api_mailhog import MailHogApi
 from retrying import retry
@@ -98,7 +97,7 @@ class AccountHelper:
 
     def change_password(self, login: str, old_password, new_password, email: str, x_dm_auth_token: str):
         headers = {"x-dm-auth-token": x_dm_auth_token}
-        self.dm_account_api.login_api.delete_v1_account_login(headers=headers, validate_response=False)
+        self.dm_account_api.login_api.delete_v1_account_login(headers=headers)
 
         json_data = {
             'login': login,
@@ -121,13 +120,13 @@ class AccountHelper:
 
     def delete_user(self, x_dm_auth_token):
         headers = {"x-dm-auth-token": x_dm_auth_token}
-        response = self.dm_account_api.login_api.delete_v1_account_login(headers=headers, validate_response=False)
+        response = self.dm_account_api.login_api.delete_v1_account_login(headers=headers)
         assert response.status_code == 204, f"Не удалось разлогиниться. Ответ: {response.text}"
         return response
 
     def delete_all_user(self, x_dm_auth_token):
         headers = {"x-dm-auth-token": x_dm_auth_token}
-        response = self.dm_account_api.login_api.delete_v1_account_login(headers=headers, validate_response=False)
+        response = self.dm_account_api.login_api.delete_v1_account_login(headers=headers)
         assert response.status_code == 204, f"Не удалось разлогиниться. Ответ: {response.text}"
         return response
 
