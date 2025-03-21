@@ -9,39 +9,43 @@ import structlog
 
 structlog.configure(
     processors=[
-        structlog.processors.JSONRenderer(indent=4,
-                                          ensure_ascii=True,
-                                          # sort_keys=True
-                                          )
+        structlog.processors.JSONRenderer(
+            indent=4,
+            ensure_ascii=True,
+            # sort_keys=True
+        )
     ]
 )
 
+
 def test_post_v1_account():
     # Регистрация пользователя
-    mailhog_configuration = MailhogConfiguration(host='http://5.63.153.31:5025')
-    dm_api_configuration = DmApiConfiguration(host='http://5.63.153.31:5051', disable_log=False)
+    mailhog_configuration = MailhogConfiguration(host="http://5.63.153.31:5025")
+    dm_api_configuration = DmApiConfiguration(
+        host="http://5.63.153.31:5051", disable_log=False
+    )
 
     account_api = AccountApi(configuration=dm_api_configuration)
     login_api = LoginApi(configuration=dm_api_configuration)
     mailhog_api = MailhogApi(configuration=mailhog_configuration)
 
-    login = 'GOOD_4'
-    password = '123456789'
-    email = f'{login}@mail.ru'
+    login = "GOOD_4"
+    password = "123456789"
+    email = f"{login}@mail.ru"
 
     # Регистрация пользователя
     response = account_api.post_v1_account(
         json={
-            'login': login,
-            'email': email,
-            'password': password,
+            "login": login,
+            "email": email,
+            "password": password,
         }
     )
-    assert response.status_code == 201, f'Пользователь не был создан {response.json()}'
+    assert response.status_code == 201, f"Пользователь не был создан {response.json()}"
 
     # Получить письма из почтового сервера
     response = mailhog_api.get_api_v2_messages()
-    assert response.status_code == 200, 'Письма не были получены'
+    assert response.status_code == 200, "Письма не были получены"
 
     # Получить активационный токен
     token = get_activation_token_by_login(login, response)
@@ -51,44 +55,48 @@ def test_post_v1_account():
     response = account_api.put_v1_account_token(
         token=token,
         headers={
-            'accept': 'text/plain',
-        }
+            "accept": "text/plain",
+        },
     )
-    assert response.status_code == 200, 'Пользователь не был активирован'
+    assert response.status_code == 200, "Пользователь не был активирован"
 
     # Авторизоваться
     response = login_api.post_v1_account_login(
         json={
-            'login': login,
-            'password': password,
-            'rememberMe': True,
+            "login": login,
+            "password": password,
+            "rememberMe": True,
         }
     )
-    assert response.status_code == 200, 'Пользователь не смог авторизоваться'
+    assert response.status_code == 200, "Пользователь не смог авторизоваться"
+
 
 def get_activation_token_by_login(login, response):
     token = None
-    for item in response.json()['items']:
-        body = item['Content']['Body']
+    for item in response.json()["items"]:
+        body = item["Content"]["Body"]
 
         # Пытаемся распарсить тело как JSON, но если не получится — ищем вручную
         try:
             user_data = loads(body)
-            user_login = user_data.get('Login')
+            user_login = user_data.get("Login")
             if user_login == login:
-                token = user_data['ConfirmationLinkUrl'].split('/')[-1]
+                token = user_data["ConfirmationLinkUrl"].split("/")[-1]
                 break
         except ValueError:
             # Письмо не в формате JSON — ищем ссылку вручную
             for line in body.splitlines():
-                if 'ConfirmationLinkUrl' in line:
-                    token = line.split('/')[-1].strip()
+                if "ConfirmationLinkUrl" in line:
+                    token = line.split("/")[-1].strip()
                     break
 
     if not token:
-        raise ValueError(f'❌ Не удалось найти токен активации для пользователя {login}')
+        raise ValueError(
+            f"❌ Не удалось найти токен активации для пользователя {login}"
+        )
 
     return token
+
 
 # def get_activation_token_by_login(login, response):
 #     token = None
