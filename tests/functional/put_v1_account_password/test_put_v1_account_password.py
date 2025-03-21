@@ -12,6 +12,6 @@ def test_put_v1_account_password(account_helper, prepare_user, prepare_password)
         old_password=old_password,
         new_password=new_password,
         email=email,
-        x_dm_auth_token=x_dm_auth_token
+        x_dm_auth_token=x_dm_auth_token,
     )
     account_helper.user_login(login=login, password=new_password)
