@@ -10,7 +10,7 @@ def test_post_v1_account(account_helper, prepare_user):
     response = account_helper.user_login(
         login=login, password=password, validate_response=True
     )
-    PostV1Account.check_reasponse_values(response)
+    PostV1Account.check_response_values(response)
 
 
 

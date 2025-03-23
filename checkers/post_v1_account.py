@@ -13,7 +13,7 @@ from hamcrest import (
 class PostV1Account:
 
     @classmethod
-    def check_reasponse_values(cls, response):
+    def check_response_values(cls, response):
         today = datetime.now().strftime("%Y-%m-%d")
         assert_that(str(response.resource.registration), starts_with(today))
         assert_that(
