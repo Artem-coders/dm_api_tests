@@ -1,4 +1,4 @@
-
+from datetime import datetime
 from hamcrest import (
     assert_that,
     has_properties,
@@ -8,12 +8,12 @@ from hamcrest import (
     equal_to,
     contains_inanyorder,
 )
-
 from checkers.http_checkers import check_status_code_http
+from assertpy import assert_that, soft_assertions
+from dm_api_account.models.user_envelope import UserRole
 
 
 def test_get_v1_account_auth(auth_account_helper):
-
         response = auth_account_helper.dm_account_api.account_api.get_v1_account(
             validate_response=True
         )
@@ -61,6 +61,10 @@ def test_get_v1_account_auth(auth_account_helper):
                 ),
             ),
         )
+        with soft_assertions():
+            assert_that(response.resource.login).is_equal_to("Good_15_03_2025_22_21%S")
+            assert_that(response.resource.roles).contains(UserRole.GUEST, UserRole.PLAYER)
+
 
 
 def test_get_v1_account_no_auth(account_helper):
