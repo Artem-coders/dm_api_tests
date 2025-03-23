@@ -1,12 +1,11 @@
 from api_class_client.class_client import ApiClient
 
 # Попытка авторизации нового пользователя без активации email
-def test_change_email():
+def test_change_email(prepare_user):
     account_api = ApiClient(host='http://5.63.153.31:5051')
-
-    login = 'Siberaia2'
-    password = '123456789'
-    email = f'{login}_new@mail.ru'
+    login = prepare_user.login
+    password = prepare_user.password
+    email = prepare_user.email
 
     # Регистрация нового пользователя без активации
     json_data = {
