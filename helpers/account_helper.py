@@ -17,7 +17,6 @@ def time_it(func):
     Декоратор для измерения времени выполнения
     Пример использования: @time_it
     """
-
     @wraps(func)
     def wrapper(*args, **kwargs):
         start = time.perf_counter()
@@ -25,7 +24,6 @@ def time_it(func):
         end = time.perf_counter()
         print(f"{func.__name__} выполнилась за {end - start:.2f} секунд")
         return result
-
     return wrapper
 
 
@@ -93,6 +91,7 @@ class AccountHelper:
     def __init__(self, dm_account_api: DMApiAccount, mailhog: MailHogApi):
         self.dm_account_api = dm_account_api
         self.mailhog = mailhog
+
 
     def auth_client(self, login: str, password: str):
         response = self.user_login(login=login, password=password)
