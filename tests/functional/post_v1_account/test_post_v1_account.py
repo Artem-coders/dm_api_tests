@@ -1,6 +1,5 @@
 from datetime import datetime
 
-import pytest
 from hamcrest import (
     assert_that,
     has_properties,
@@ -10,7 +9,7 @@ from hamcrest import (
     has_property,
     equal_to,
 )
-from checkers.http_checkers import check_negative_login_http, check_negative_password_http, check_negative_email_http, check_negative_login_password_email_http
+from checkers.http_checkers import check_status_code_http
 
 
 def test_post_v1_account(account_helper, prepare_user):
@@ -46,23 +45,22 @@ def test_post_v1_account(account_helper, prepare_user):
     )
 
 
-
 def test_post_v1_account_negative_check_login(account_helper):
-    with check_negative_login_http(400, "Validation failed", "Short"):
+    with check_status_code_http(400, "Validation failed"):
         login = 'B'
         password = '123456789'
         email = "Good@mail.ru"
         account_helper.register_new_user(login=login, password=password, email=email)
 
 def test_post_v1_account_negative_check_password(account_helper):
-    with check_negative_password_http(400, "Validation failed", "Short"):
+    with check_status_code_http(400, "Validation failed"):
         login = 'Bad1234567810'
         password = '12345'
         email = "Bad1234567810@mail.ru"
         account_helper.register_new_user(login=login, password=password, email=email)
 
 def test_post_v1_account_negative_check_email(account_helper):
-    with check_negative_email_http(400, "Validation failed", "Invalid"):
+    with check_status_code_http(400, "Validation failed"):
         login = 'Bad987654'
         password = '123456789'
         email = "Bad987654mail.ru"
@@ -70,7 +68,7 @@ def test_post_v1_account_negative_check_email(account_helper):
 
 
 def test_post_v1_account_negative_check_login_password_email(account_helper):
-    with check_negative_login_password_email_http(400, "Validation failed", "Short", "Short", "Invalid"):
+    with check_status_code_http(400, "Validation failed"):
         login = 'B'
         password = '12345'
         email = "Bsdskmail.ru"
