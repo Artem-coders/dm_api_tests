@@ -10,8 +10,8 @@ from hamcrest import (
     equal_to,
 )
 from checkers.http_checkers import check_status_code_http
-from checkers.http_checkers import check_negative_login_http, check_negative_password_http, check_negative_email_http, check_negative_login_password_email_http
 from checkers.post_v1_account import PostV1Account
+
 
 
 def test_post_v1_account(account_helper, prepare_user):
