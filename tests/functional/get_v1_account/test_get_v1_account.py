@@ -8,7 +8,7 @@ def test_get_v1_account_auth(auth_account_helper):
         response = auth_account_helper.dm_account_api.account_api.get_v1_account(
             validate_response=True
         )
-        GetV1Account.check_response_value_get_v1_account(response)
+        GetV1Account.check_response_value_get_v1_account(response, expected_login="Good")
         with soft_assertions():
             assert_that(response.resource.login).is_equal_to("Good_15_03_2025_22_21%S")
             assert_that(response.resource.roles).contains(UserRole.GUEST, UserRole.PLAYER)

@@ -12,11 +12,11 @@ from hamcrest import (
 class GetV1Account:
 
     @classmethod
-    def check_response_value_get_v1_account(cls, response):
+    def check_response_value_get_v1_account(cls, response, expected_login: str = None):
         assert_that(
             response,
             all_of(
-                has_property("resource", has_property("login", starts_with("Good"))),
+                has_property("resource", has_property("login", starts_with(expected_login))),
                 has_property(
                     "resource",
                     has_properties({"roles": contains_inanyorder("Guest", "Player")}),
