@@ -101,6 +101,8 @@ class AccountHelper:
         self.dm_account_api.account_api.set_headers(token)
         self.dm_account_api.login_api.set_headers(token)
 
+
+    @allure.step("Меняем пароль")
     def change_password(
         self, login: str, old_password, new_password, email: str, x_dm_auth_token: str
     ):
@@ -127,6 +129,7 @@ class AccountHelper:
         )
         return response
 
+    @allure.step("Разлогин пользователя")
     def delete_user(self, x_dm_auth_token):
         headers = {"x-dm-auth-token": x_dm_auth_token}
         response = self.dm_account_api.login_api.delete_v1_account_login(
@@ -137,6 +140,8 @@ class AccountHelper:
         ), f"Не удалось разлогиниться. Ответ: {response.text}"
         return response
 
+
+    @allure.step("Разлогин пользователя на всех устройствах")
     def delete_all_user(self, x_dm_auth_token):
         headers = {"x-dm-auth-token": x_dm_auth_token}
         response = self.dm_account_api.login_api.delete_v1_account_login(
@@ -197,6 +202,7 @@ class AccountHelper:
             ], "Токен для пользователя не был получен"
         return response
 
+    @allure.step("Получаем токен пользователя для его активации из письма в mailhog")
     @retry(
         stop_max_attempt_number=5, retry_on_result=retry_if_result_none, wait_fixed=1000
     )
@@ -212,31 +218,7 @@ class AccountHelper:
         return token
 
 
-    # def get_activation_token_by_login(self, login, response):
-    #     token = None
-    #     for item in response.json()['items']:
-    #         body = item['Content']['Body']
-    #
-    #         # Пытаемся распарсить тело как JSON, но если не получится — ищем вручную
-    #         try:
-    #             user_data = loads(body)
-    #             user_login = user_data.get('Login')
-    #             if user_login == login:
-    #                 token = user_data['ConfirmationLinkUrl'].split('/')[-1]
-    #                 break
-    #         except ValueError:
-    #             # Письмо не в формате JSON — ищем ссылку вручную
-    #             for line in body.splitlines():
-    #                 if 'ConfirmationLinkUrl' in line:
-    #                     token = line.split('/')[-1].strip()
-    #                     break
-    #
-    #     if not token:
-    #         raise ValueError(f'❌ Не удалось найти токен активации для пользователя {login}')
-    #
-    #     return token
-
-
+    @allure.step("Получаем токен сброса пароля из письма в mailhog")
     @retry(
         stop_max_attempt_number=5, retry_on_result=retry_if_result_none, wait_fixed=1000
     )

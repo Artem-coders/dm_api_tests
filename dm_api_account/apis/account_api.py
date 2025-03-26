@@ -20,7 +20,7 @@ class AccountApi(RestClient):
         response = self.post(path=f'/v1/account', json=registration.model_dump(exclude_none=True, by_alias=True))
         return response
 
-
+    @allure.step("Получаем данные пользователя")
     def get_v1_account(self, validate_response=False, **kwargs):
         """
         Get current user
@@ -46,7 +46,7 @@ class AccountApi(RestClient):
             return UserEnvelope(**response.json())
         return response
 
-
+    @allure.step("Меняем пароль")
     def put_v1_account_password(self, json_data,  validate_response=True):
         """
         Change registered user password
@@ -57,7 +57,7 @@ class AccountApi(RestClient):
             return UserEnvelope(**response.json())
         return response
 
-
+    @allure.step("Сбрасываем пароль")
     def post_v1_account_password(self, json_data, validate_response=True):
         """
         Reset registered user password
