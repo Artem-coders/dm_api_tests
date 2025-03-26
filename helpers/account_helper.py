@@ -4,6 +4,8 @@ import time
 from collections import namedtuple
 from json import loads
 
+import allure
+
 from dm_api_account.models.login_credentials import LoginCredentials
 from dm_api_account.models.registration import Registration
 from services.dm_api_account import DMApiAccount
@@ -153,6 +155,7 @@ class AccountHelper:
         User = namedtuple("User", ["login", "password", "email"])
         return User(login=login, password=password, email=email)
 
+    @allure.step("Регистрация нового пользователя")
     def register_new_user(self, login: str, password: str, email: str):
         registration = Registration(login=login, password=password, email=email)
         response = self.dm_account_api.account_api.post_v1_account(
@@ -172,6 +175,7 @@ class AccountHelper:
         )
         return response
 
+    @allure.step("Аутентификация нового пользователя")
     def user_login(
         self,
         login: str,
@@ -180,6 +184,7 @@ class AccountHelper:
         validate_response=False,
         validate_headers=False,
     ):
+
         login_credentials = LoginCredentials(
             login=login, password=password, remember_me=remember_me
         )
@@ -198,12 +203,39 @@ class AccountHelper:
     def get_activation_token_by_login(self, login):
         token = None
         response = self.mailhog.mailhog_api.get_api_v2_messages()
+        print(f"Ответ от Mailhog: {response}")
         for item in response.json()["items"]:
             user_data = loads(item["Content"]["Body"])
             user_login = user_data["Login"]
             if user_login == login:
                 token = user_data["ConfirmationLinkUrl"].split("/")[-1]
         return token
+
+
+    # def get_activation_token_by_login(self, login, response):
+    #     token = None
+    #     for item in response.json()['items']:
+    #         body = item['Content']['Body']
+    #
+    #         # Пытаемся распарсить тело как JSON, но если не получится — ищем вручную
+    #         try:
+    #             user_data = loads(body)
+    #             user_login = user_data.get('Login')
+    #             if user_login == login:
+    #                 token = user_data['ConfirmationLinkUrl'].split('/')[-1]
+    #                 break
+    #         except ValueError:
+    #             # Письмо не в формате JSON — ищем ссылку вручную
+    #             for line in body.splitlines():
+    #                 if 'ConfirmationLinkUrl' in line:
+    #                     token = line.split('/')[-1].strip()
+    #                     break
+    #
+    #     if not token:
+    #         raise ValueError(f'❌ Не удалось найти токен активации для пользователя {login}')
+    #
+    #     return token
+
 
     @retry(
         stop_max_attempt_number=5, retry_on_result=retry_if_result_none, wait_fixed=1000

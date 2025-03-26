@@ -1,3 +1,4 @@
+import allure
 import requests
 
 from dm_api_account.models.get_user import GetUser
@@ -9,6 +10,7 @@ from restclient.client import RestClient
 
 class AccountApi(RestClient):
 
+    @allure.step("Зарегестрировать нового пользователя")
     def post_v1_account(self, registration: Registration):
         """
         Register new user
@@ -29,7 +31,7 @@ class AccountApi(RestClient):
             return GetUser(**response.json())
         return response
 
-
+    @allure.step("Активировать пользователя")
     def put_v1_account_token(self, token, validate_response=True):
         """
         Activate registered user
