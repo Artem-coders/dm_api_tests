@@ -2,6 +2,12 @@ name: Python Tests
 
 on: [push, pull_request]
 
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   test:
     name: Python tests
@@ -74,7 +80,7 @@ jobs:
       - run: allure generate -c allure-results -o _site
 
       - name: Store report
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v1
         with:
           name: _site
           path: _site
@@ -93,4 +99,4 @@ jobs:
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v1
