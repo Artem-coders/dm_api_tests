@@ -88,20 +88,13 @@ jobs:
     steps:
       - name: Download generated report
         uses: actions/download-artifact@v4
-        with:
-          name: _site
-          path: _site
-
-      - name: Debug report folder
-        run: ls -R _site || echo "Report folder not found"
 
       - name: Upload allure report
         uses: actions/upload-pages-artifact@v3
-        with:
-          path: _site
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+      - run: echo "https://artem-coders.github.io/dm_api_tests/"
 
 
