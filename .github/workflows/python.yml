@@ -77,7 +77,7 @@ jobs:
       - name: Store report
         uses: actions/upload-artifact@v4
         with:
-          name: _site
+          name: github-pages
           path: _site
           retention-days: 1
 
