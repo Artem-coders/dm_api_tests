@@ -49,7 +49,7 @@ jobs:
           pytest ./tests --alluredir=allure-results --disable-warnings
 
       - name: Archive allure results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: allure-results
           path: allure-results
@@ -60,8 +60,6 @@ jobs:
     needs: test
     name: Generate report
     steps:
-      - uses: actions/checkout@v4
-
       - uses: actions/setup-java@v3
         with:
           distribution: 'microsoft'
@@ -73,10 +71,7 @@ jobs:
           && sudo ln -s /opt/allure-2.33.0/bin/allure /usr/bin/allure
 
       - name: Download allure results
-        uses: actions/download-artifact@v4
-        with:
-          name: allure-results
-
+        uses: actions/download-artifact@v3
       - run: allure generate -c allure-results -o _site
 
       - name: Store report
@@ -92,11 +87,11 @@ jobs:
     name: Publish report
     steps:
       - name: Download allure results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v3
 
       - name: Upload allure report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-pages-artifact@v2
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages@v1.2.9
