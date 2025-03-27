@@ -38,12 +38,12 @@ jobs:
             pytest ./tests && break
             COUNT=$((COUNT+1))
             echo "Tests failed. Retrying... ($COUNT/$RETRY_LIMIT)"
-            sleep 5  # Optional: Delay before retry
+            sleep 5
           done
           pytest ./tests --alluredir=allure-results --disable-warnings
 
       - name: Archive allure results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: allure-results
           path: allure-results
@@ -54,16 +54,27 @@ jobs:
     needs: test
     name: Generate report
     steps:
-      - uses: action/setup-java@v3
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v3
         with:
           distribution: 'microsoft'
           java-version: '17'
-      - run: sudo wget https://github.com/allure-framework/allure2/releases/download/2.33.0/allure-2.33.0.tgz && sudo tar -xzf allure-2.33.0.tgz -C /opt/ && sudo ln -s /opt/allure-2.33.0/bin/allure /usr/bin/allure
+
+      - run: |
+          sudo wget https://github.com/allure-framework/allure2/releases/download/2.33.0/allure-2.33.0.tgz \
+          && sudo tar -xzf allure-2.33.0.tgz -C /opt/ \
+          && sudo ln -s /opt/allure-2.33.0/bin/allure /usr/bin/allure
+
       - name: Download allure results
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results
+
       - run: allure generate -c allure-results -o _site
+
       - name: Store report
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           name: _site
           path: _site
@@ -75,11 +86,11 @@ jobs:
     name: Publish report
     steps:
       - name: Download allure results
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
+
       - name: Upload allure report
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-artifact@v4
+
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1.2.9
-
-
+        uses: actions/deploy-pages@v4
