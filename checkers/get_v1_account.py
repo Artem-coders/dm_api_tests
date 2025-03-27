@@ -1,4 +1,4 @@
-
+import allure
 from hamcrest import (
     assert_that,
     has_properties,
@@ -13,47 +13,48 @@ class GetV1Account:
 
     @classmethod
     def check_response_value_get_v1_account(cls, response, expected_login: str = None):
-        assert_that(
-            response,
-            all_of(
-                has_property("resource", has_property("login", starts_with(expected_login))),
-                has_property(
-                    "resource",
-                    has_properties({"roles": contains_inanyorder("Guest", "Player")}),
-                ),
-                has_property(
-                    "resource",
+        with allure.step("Проверка ответа на get_v1_account активного пользователя"):
+            assert_that(
+                response,
+                all_of(
+                    has_property("resource", has_property("login", starts_with(expected_login))),
                     has_property(
-                        "settings",
+                        "resource",
+                        has_properties({"roles": contains_inanyorder("Guest", "Player")}),
+                    ),
+                    has_property(
+                        "resource",
+                        has_property(
+                            "settings",
+                            has_properties(
+                                {
+                                    "colorSchema": equal_to("Modern"),
+                                    "paging": has_properties(
+                                        {
+                                            "postsPerPage": equal_to(10),
+                                            "commentsPerPage": equal_to(10),
+                                            "topicsPerPage": equal_to(10),
+                                            "messagesPerPage": equal_to(10),
+                                            "entitiesPerPage": equal_to(10),
+                                        }
+                                    ),
+                                }
+                            ),
+                        ),
+                    ),
+                    has_property(
+                        "resource",
                         has_properties(
                             {
-                                "colorSchema": equal_to("Modern"),
-                                "paging": has_properties(
+                                "rating": has_properties(
                                     {
-                                        "postsPerPage": equal_to(10),
-                                        "commentsPerPage": equal_to(10),
-                                        "topicsPerPage": equal_to(10),
-                                        "messagesPerPage": equal_to(10),
-                                        "entitiesPerPage": equal_to(10),
+                                        "enabled": equal_to(True),
+                                        "quality": equal_to(0),
+                                        "quantity": equal_to(0),
                                     }
-                                ),
+                                )
                             }
                         ),
                     ),
                 ),
-                has_property(
-                    "resource",
-                    has_properties(
-                        {
-                            "rating": has_properties(
-                                {
-                                    "enabled": equal_to(True),
-                                    "quality": equal_to(0),
-                                    "quantity": equal_to(0),
-                                }
-                            )
-                        }
-                    ),
-                ),
-            ),
-        )
+            )
