@@ -35,7 +35,7 @@ rootpath==0.1.0
 setuptools==78.1.0
 six==1.17.0
 structlog==25.1.0
-swagger-coverage @ https://github.com/Artem-coders/swagger-coverage-py/archive/refs/heads/master.zip#sha256=1acf5b09b98407747d694140b1503b7f3097d7fc26f3fbfb63b70963f118bb26
+swagger-coverage @ https://github.com/Artem-coders/swagger-coverage-py/archive/refs/heads/master.zip
 toml==0.10.2
 typing_extensions==4.12.2
 tzdata==2025.2
