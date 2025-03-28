@@ -172,6 +172,17 @@ class AccountHelper:
         )
         return response
 
+    @allure.step("Регистрация нового пользователя без активации токена")
+    def register_new_user_without_token_activation(self, login: str, password: str, email: str):
+        registration = Registration(login=login, password=password, email=email)
+        response = self.dm_account_api.account_api.post_v1_account(
+            registration=registration
+        )
+        assert (
+            response.status_code == 201
+        ), f"Пользователь не был создан {response.json()}"
+        return response
+
     @allure.step("Аутентификация нового пользователя")
     def user_login(
         self,
