@@ -2,6 +2,12 @@ name: Python Tests
 
 on: [push, pull_request]
 
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   test:
     name: Python tests
@@ -31,12 +37,64 @@ jobs:
 
       - name: Run tests with retry
         run: |
-          RETRY_LIMIT=3
+          RETRY_LIMIT=5
           COUNT=0
           until [ $COUNT -ge $RETRY_LIMIT ]
           do
             pytest ./tests && break
             COUNT=$((COUNT+1))
             echo "Tests failed. Retrying... ($COUNT/$RETRY_LIMIT)"
-            sleep 5  # Optional: Delay before retry
+            sleep 3
           done
+          pytest ./tests --alluredir=allure-results --disable-warnings
+
+      - name: Archive allure results
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results
+          retention-days: 1
+
+  generate-report:
+    runs-on: ubuntu-latest
+    needs: test
+    name: Generate report
+    steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'microsoft'
+          java-version: '17'
+
+      - run: |
+          sudo wget https://github.com/allure-framework/allure2/releases/download/2.33.0/allure-2.33.0.tgz \
+          && sudo tar -xzf allure-2.33.0.tgz -C /opt/ \
+          && sudo ln -s /opt/allure-2.33.0/bin/allure /usr/bin/allure
+
+      - name: Download allure results
+        uses: actions/download-artifact@v4
+      - run: allure generate -c allure-results -o _site
+
+      - name: Store report
+        uses: actions/upload-artifact@v4
+        with:
+          name: _site
+          path: _site
+          retention-days: 1
+
+  publish-report:
+    runs-on: ubuntu-latest
+    needs: generate-report
+    name: Publish report
+    steps:
+      - name: Download generated report
+        uses: actions/download-artifact@v4
+
+      - name: Upload allure report
+        uses: actions/upload-pages-artifact@v3
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+      - run: echo "https://artem-coders.github.io/dm_api_tests/"
+
+

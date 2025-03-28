@@ -1,30 +1,19 @@
 import allure
 
-from api_class_client.class_client import ApiClient
+from checkers.http_checkers import check_status_code_http
 
 
 @allure.suite("Тест на проверку попытки авторизации нового пользователя без активации email")
 class TestsPutV1AccountEmail:
 
+
     @allure.title("Попытка авторизации нового пользователя без активации email")
-    def test_change_email(self, prepare_user):
-        account_api = ApiClient(host='http://5.63.153.31:5051')
-        login = prepare_user.login
-        password = prepare_user.password
-        email = prepare_user.email
-
-        # Регистрация нового пользователя без активации
-        json_data = {
-            'login': login,
-            'email': email,
-            'password': password,
-        }
-
-        response = account_api.post_v1_account(json_data=json_data)
-        assert response.status_code == 201, f'Пользователь не был создан {response.json()}'
-
-        # Попытка авторизации нового пользователя без активации
-        json_data = {'login': login, 'password': password}
-        response = account_api.post_v1_account_login(json_data=json_data)
-        assert response.status_code == 403, 'Ожидался статус 403 Forbidden при попытке входа с email не прошедшим активацию'
-
+    def test_change_email1(self, prepare_user, account_helper):
+        with check_status_code_http(403, "User is inactive. Address the technical support for more details"):
+            login = prepare_user.login
+            password = prepare_user.password
+            email = prepare_user.email
+            account_helper.register_new_user_without_token_activation(login=login, password=password, email=email)
+            account_helper.user_login(
+                login=login, password=password, validate_response=True
+            )

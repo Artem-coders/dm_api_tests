@@ -1,7 +1,7 @@
 import allure
 import requests
 
-from dm_api_account.models.get_user import GetUser
+from dm_api_account.models.user_details_envelope import UserDetailsEnvelope
 from dm_api_account.models.login_credentials import LoginCredentials
 from dm_api_account.models.registration import Registration
 from dm_api_account.models.user_envelope import UserEnvelope
@@ -28,7 +28,7 @@ class AccountApi(RestClient):
         """
         response = self.get(path=f'/v1/account', **kwargs)
         if validate_response:
-            return GetUser(**response.json())
+            return UserDetailsEnvelope(**response.json())
         return response
 
     @allure.step("Активировать пользователя")
