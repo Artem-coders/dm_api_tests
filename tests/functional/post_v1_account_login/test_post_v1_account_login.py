@@ -1,21 +1,14 @@
 import allure
-
-from api_class_client.class_client import ApiClient
+from assertpy import assert_that, soft_assertions
 
 @allure.suite("Тест на проверку активированного пользователя")
 class TestLoginUser:
 
+
     @allure.title("Проверка входа активированного пользователя")
-    def test_login_user(self):
-        account_api = ApiClient(host='http://5.63.153.31:5051')
-        login = 'Siberaia1'
-        password = '123456789'
-
-        json_data = {
-            'login': login,
-            'password': password,
-            'rememberMe': True,
-        }
-
-        response = account_api.post_v1_account_login(json_data=json_data)
-        assert response.status_code == 200, 'Пользователь не смог авторизоваться'
+    def test_get_v1_account_auth1(self, account_helper, login='Siberaia1', password='123456789'):
+        response = account_helper.user_login(
+            login=login, password=password, validate_response=True
+        )
+        with soft_assertions():
+            assert_that(response.resource.login).is_equal_to("Siberaia1")

@@ -152,14 +152,6 @@ class AccountHelper:
         ), f"Не удалось разлогиниться. Ответ: {response.text}"
         return response
 
-    @staticmethod
-    def prepare_user_data():
-        login = f"PAS_{random.randint(1000, 9999)}"
-        password = ''.join(random.choices(string.ascii_letters + string.digits, k=9))
-        email = f'{login}@mail.ru'
-        User = namedtuple("User", ["login", "password", "email"])
-        return User(login=login, password=password, email=email)
-
     @allure.step("Регистрация нового пользователя")
     def register_new_user(self, login: str, password: str, email: str):
         registration = Registration(login=login, password=password, email=email)
@@ -178,6 +170,17 @@ class AccountHelper:
         response = self.dm_account_api.account_api.put_v1_account_token(
             token=token, validate_response=True
         )
+        return response
+
+    @allure.step("Регистрация нового пользователя без активации токена")
+    def register_new_user_without_token_activation(self, login: str, password: str, email: str):
+        registration = Registration(login=login, password=password, email=email)
+        response = self.dm_account_api.account_api.post_v1_account(
+            registration=registration
+        )
+        assert (
+            response.status_code == 201
+        ), f"Пользователь не был создан {response.json()}"
         return response
 
     @allure.step("Аутентификация нового пользователя")
