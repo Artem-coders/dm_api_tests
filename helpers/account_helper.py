@@ -152,14 +152,6 @@ class AccountHelper:
         ), f"Не удалось разлогиниться. Ответ: {response.text}"
         return response
 
-    @staticmethod
-    def prepare_user_data():
-        login = f"PAS_{random.randint(1000, 9999)}"
-        password = ''.join(random.choices(string.ascii_letters + string.digits, k=9))
-        email = f'{login}@mail.ru'
-        User = namedtuple("User", ["login", "password", "email"])
-        return User(login=login, password=password, email=email)
-
     @allure.step("Регистрация нового пользователя")
     def register_new_user(self, login: str, password: str, email: str):
         registration = Registration(login=login, password=password, email=email)
