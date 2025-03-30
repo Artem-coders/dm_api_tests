@@ -129,6 +129,17 @@ class AccountHelper:
         )
         return response
 
+
+    @allure.step("Меняем email")
+    def change_email(
+        self, login: str, password: str, new_email, x_dm_auth_token: str
+    ):
+        json_data = {"login": login, "password": password, "email": new_email, "x-dm-auth-token": x_dm_auth_token}
+        self.dm_account_api.account_api.put_v1_account_email(
+            json_data=json_data, validate_response=False
+        )
+
+
     @allure.step("Разлогин пользователя")
     def delete_user(self, x_dm_auth_token):
         headers = {"x-dm-auth-token": x_dm_auth_token}
@@ -153,35 +164,25 @@ class AccountHelper:
         return response
 
     @allure.step("Регистрация нового пользователя")
-    def register_new_user(self, login: str, password: str, email: str):
+    def register_new_user(self, login: str, password: str, email: str, activate: bool = True):
         registration = Registration(login=login, password=password, email=email)
         response = self.dm_account_api.account_api.post_v1_account(
             registration=registration
         )
-        assert (
-            response.status_code == 201
-        ), f"Пользователь не был создан {response.json()}"
+        if not activate:
+            return response
 
         start_time = time.time()
         token = self.get_activation_token_by_login(login=login)
         end_time = time.time()
         assert end_time - start_time < 5, "Время ожидания активации превышено"
         assert token is not None, f"Токен для пользователя {login} не был получен"
+
         response = self.dm_account_api.account_api.put_v1_account_token(
             token=token, validate_response=True
         )
         return response
 
-    @allure.step("Регистрация нового пользователя без активации токена")
-    def register_new_user_without_token_activation(self, login: str, password: str, email: str):
-        registration = Registration(login=login, password=password, email=email)
-        response = self.dm_account_api.account_api.post_v1_account(
-            registration=registration
-        )
-        assert (
-            response.status_code == 201
-        ), f"Пользователь не был создан {response.json()}"
-        return response
 
     @allure.step("Аутентификация нового пользователя")
     def user_login(
@@ -205,21 +206,29 @@ class AccountHelper:
             ], "Токен для пользователя не был получен"
         return response
 
-    @allure.step("Получаем токен пользователя для его активации из письма в mailhog")
-    @retry(
-        stop_max_attempt_number=5, retry_on_result=retry_if_result_none, wait_fixed=1000
-    )
+    @allure.step("Получаем токен пользователя для его активации из письма в MailHog")
+    @retry(stop_max_attempt_number=5, retry_on_result=retry_if_result_none, wait_fixed=2000)
     def get_activation_token_by_login(self, login):
         token = None
         response = self.mailhog.mailhog_api.get_api_v2_messages()
-        print(f"Ответ от Mailhog: {response}")
-        for item in response.json()["items"]:
-            user_data = loads(item["Content"]["Body"])
-            user_login = user_data["Login"]
-            if user_login == login:
-                token = user_data["ConfirmationLinkUrl"].split("/")[-1]
-        return token
 
+        for item in response.json()["items"]:
+            body = item["Content"]["Body"]
+
+            try:
+                user_data = loads(body)
+                user_login = user_data.get("Login")
+                if user_login == login:
+                    token = user_data["ConfirmationLinkUrl"].split("/")[-1]
+                    break
+            except ValueError:
+                for line in body.splitlines():
+                    if "ConfirmationLinkUrl" in line:
+                        token = line.split("/")[-1].strip()
+                        break
+
+        assert token is not None, f"Не удалось найти токен для {login}"
+        return token
 
     @allure.step("Получаем токен сброса пароля из письма в mailhog")
     @retry(

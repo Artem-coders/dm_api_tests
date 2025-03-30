@@ -99,3 +99,9 @@ def prepare_password():
     user = User(password=password)
     return user
 
+@pytest.fixture
+def prepare_email():
+    email_prefix = ''.join(random.choices(string.ascii_letters + string.digits, k=9))
+    email = f"{email_prefix}@mail.ru"
+    Email = namedtuple("Email", ["email"])
+    return Email(email=email)

@@ -67,3 +67,16 @@ class AccountApi(RestClient):
         if validate_response:
             return UserEnvelope(**response.json())
         return response
+
+
+    @allure.step("Меняем email")
+    def put_v1_account_email(self, json_data, validate_response=True):
+        """
+        Change registered user email
+        :return:
+        """
+        response = self.put(path=f'/v1/account/email', json=json_data)
+        if validate_response:
+            return UserEnvelope(**response.json())
+        return response
+
