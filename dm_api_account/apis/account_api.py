@@ -1,7 +1,7 @@
 import allure
 import requests
 
-from dm_api_account.models.get_user import GetUser
+from dm_api_account.models.user_details_envelope import UserDetailsEnvelope
 from dm_api_account.models.login_credentials import LoginCredentials
 from dm_api_account.models.registration import Registration
 from dm_api_account.models.user_envelope import UserEnvelope
@@ -28,7 +28,7 @@ class AccountApi(RestClient):
         """
         response = self.get(path=f'/v1/account', **kwargs)
         if validate_response:
-            return GetUser(**response.json())
+            return UserDetailsEnvelope(**response.json())
         return response
 
     @allure.step("Активировать пользователя")
@@ -67,3 +67,16 @@ class AccountApi(RestClient):
         if validate_response:
             return UserEnvelope(**response.json())
         return response
+
+
+    @allure.step("Меняем email")
+    def put_v1_account_email(self, json_data, validate_response=True):
+        """
+        Change registered user email
+        :return:
+        """
+        response = self.put(path=f'/v1/account/email', json=json_data)
+        if validate_response:
+            return UserEnvelope(**response.json())
+        return response
+

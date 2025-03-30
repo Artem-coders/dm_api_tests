@@ -1,30 +1,31 @@
 import allure
 
-from api_class_client.class_client import ApiClient
+from checkers.http_checkers import check_status_code_http
 
 
-@allure.suite("Тест на проверку попытки авторизации нового пользователя без активации email")
+@allure.suite("Тест на проверку авторизации нового пользователя с новым email")
 class TestsPutV1AccountEmail:
 
-    @allure.title("Попытка авторизации нового пользователя без активации email")
-    def test_change_email(self, prepare_user):
-        account_api = ApiClient(host='http://5.63.153.31:5051')
+    @allure.title("Меняем email пользователя и выполняем авторизацию")
+    def test_put_v1_account_email(self, account_helper, prepare_user, prepare_email):
         login = prepare_user.login
         password = prepare_user.password
         email = prepare_user.email
+        new_email = prepare_email.email
+        account_helper.register_new_user(login=login, password=password, email=email)
+        response = account_helper.user_login(login=login, password=password)
+        x_dm_auth_token = response.headers.get("x-dm-auth-token")
+        account_helper.change_email(
+            login=login,
+            password=password,
+            new_email=new_email,
+            x_dm_auth_token=x_dm_auth_token,
+        )
+        with check_status_code_http(403, "User is inactive. Address the technical support for more details"):
+            account_helper.user_login(login=login, password=password)
 
-        # Регистрация нового пользователя без активации
-        json_data = {
-            'login': login,
-            'email': email,
-            'password': password,
-        }
-
-        response = account_api.post_v1_account(json_data=json_data)
-        assert response.status_code == 201, f'Пользователь не был создан {response.json()}'
-
-        # Попытка авторизации нового пользователя без активации
-        json_data = {'login': login, 'password': password}
-        response = account_api.post_v1_account_login(json_data=json_data)
-        assert response.status_code == 403, 'Ожидался статус 403 Forbidden при попытке входа с email не прошедшим активацию'
-
+        token = account_helper.get_activation_token_by_login(login=login)
+        account_helper.dm_account_api.account_api.put_v1_account_token(
+            token=token, validate_response=True
+        )
+        account_helper.user_login(login=login, password=password)

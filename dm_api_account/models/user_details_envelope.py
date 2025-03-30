@@ -42,7 +42,7 @@ class Resource(BaseModel):
     settings: Settings
 
 
-class GetUser(BaseModel):
+class UserDetailsEnvelope(BaseModel):
     model_config = ConfigDict(extra='forbid')
     resource: Resource
     metadata: str = Field(None, alias='originalPictureUrl')

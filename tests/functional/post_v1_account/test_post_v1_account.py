@@ -52,3 +52,15 @@ class TestsPostV1Account:
             password = '12345'
             email = "Bsdskmail.ru"
             account_helper.register_new_user(login=login, password=password, email=email)
+
+
+    @allure.title("Попытка авторизации нового пользователя без активации email")
+    def test_user_authorization_without_activation(self, prepare_user, account_helper):
+        with check_status_code_http(403, "User is inactive. Address the technical support for more details"):
+            login = prepare_user.login
+            password = prepare_user.password
+            email = prepare_user.email
+            account_helper.register_new_user(login=login, password=password, email=email, activate=False)
+            account_helper.user_login(
+                login=login, password=password, validate_response=True
+            )
