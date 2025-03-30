@@ -4,7 +4,8 @@ from json import loads
 import random
 import string
 from pathlib import Path
-
+from swagger_coverage_py.reporter import CoverageReporter
+from requests.auth import HTTPBasicAuth
 import pytest
 
 from helpers.account_helper import AccountHelper, time_it
@@ -31,6 +32,14 @@ options = (
     'user.login',
     'user.password',
 )
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_swagger_coverage():
+    reporter = CoverageReporter(api_name="dm-api-account", host="http://5.63.153.31:5051")
+    reporter.setup("/swagger/Account/swagger.json")
+    yield
+    reporter.generate_report()
+    reporter.cleanup_input_files()
 
 @pytest.fixture(scope='session', autouse=True)
 def set_config(request):
