@@ -12,24 +12,21 @@ v.set_config_name("prod")
 v.add_config_path(config)
 v.read_in_config()
 
-
 def send_file() -> None:
     telegram_bot = TeleBot(v.get("telegram.token"))
 
-    # Строим путь к файлу относительно корня проекта
-    file_path = current_file_path.parent.parent / "tests" / "swagger-coverage-dm-api-account.html"
-
-    # Логируем путь к файлу
+    # Используем абсолютный путь для CI/CD
+    if "CI" in os.environ:  # Проверяем, работает ли в CI
+        project_root = Path(os.environ.get("GITHUB_WORKSPACE", "/"))  # Для GitHub Actions, либо пустое значение
+        file_path = project_root / "tests" / "swagger-coverage-dm-api-account.html"
+    else:
+        file_path = current_file_path.parent.parent.parent / "tests" / "swagger-coverage-dm-api-account.html"
     print(f"Ищем файл: {file_path}")
 
-    # Проверка, существует ли файл
     if not file_path.exists():
         raise FileNotFoundError(f"Файл не найден по пути: {file_path}")
-
-    # Логируем успешное нахождение файла
     print(f"Файл найден: {file_path}")
 
-    # Открываем и отправляем файл
     with open(file_path, "rb") as document:
         telegram_bot.send_document(
             v.get("telegram.chat_id"),

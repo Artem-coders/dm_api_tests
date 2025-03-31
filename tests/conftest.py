@@ -53,6 +53,7 @@ def get_config_path():
     raise FileNotFoundError(f"Не найден файл конфигурации ни в {config_path}, ни в {fallback_path}")
 
 
+
 @pytest.fixture(scope="session", autouse=True)
 def setup_swagger_coverage():
     config_path = get_config_path()
@@ -71,9 +72,9 @@ def setup_swagger_coverage():
     yield
     reporter.generate_report()
     reporter.cleanup_input_files()
+    send_file()
     if os.path.exists(test_config_path):
         os.remove(test_config_path)
-        send_file()
 
 
 
