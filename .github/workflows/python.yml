@@ -46,13 +46,13 @@ jobs:
       - name: Run tests with retry
         run: |
           export JAVA_HOME=$JAVA_HOME
-          RETRY_LIMIT=3
+          RETRY_LIMIT=2
           COUNT=0
           pytest ./tests --alluredir=allure-results --disable-warnings || FAILED=true
           
           while [ $COUNT -lt $RETRY_LIMIT ] && [ "$FAILED" = "true" ]; do
             echo "Retrying failed tests... ($((COUNT+1))/$RETRY_LIMIT)"
-            sleep 5
+            sleep 3
             pytest --last-failed --alluredir=allure-results --disable-warnings && FAILED=false
             COUNT=$((COUNT+1))
           done
