@@ -37,45 +37,31 @@ options = (
 
 )
 
-def get_config_path():
-    tests_dir = os.path.dirname(__file__)
-    config_path = os.path.join(tests_dir, "swagger-coverage-config-dm-api-account.json")
-
-    if os.path.exists(config_path):
-        return config_path
-
-    project_root = os.path.abspath(os.path.join(tests_dir, ".."))
-    fallback_path = os.path.join(project_root, "swagger-coverage-config-dm-api-account.json")
-
-    if os.path.exists(fallback_path):
-        return fallback_path
-
-    raise FileNotFoundError(f"Не найден файл конфигурации ни в {config_path}, ни в {fallback_path}")
-
-
-
 @pytest.fixture(scope="session", autouse=True)
 def setup_swagger_coverage():
-    config_path = get_config_path()
-    test_dir = os.getcwd()  # Текущая директория тестов
-    test_config_path = os.path.join(test_dir, "swagger-coverage-config-dm-api-account.json")
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    config_filename = "swagger-coverage-config-dm-api-account.json"
+    config_path = os.path.join(project_root, config_filename)
 
-    if not os.path.exists(test_config_path):
-        shutil.copy(config_path, test_config_path)
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(f"Конфиг не найден: {config_path}")
 
-    reporter = CoverageReporter(
-        api_name="dm-api-account",
-        host="http://5.63.153.31:5051"
-    )
+    original_cwd = os.getcwd()
+    os.chdir(project_root)
 
-    reporter.setup("/swagger/Account/swagger.json")
-    yield
-    reporter.generate_report()
-    reporter.cleanup_input_files()
+    try:
+        reporter = CoverageReporter(api_name="dm-api-account", host="http://5.63.153.31:5051")
+        reporter.setup("/swagger/Account/swagger.json")
+
+        yield
+
+        reporter.generate_report()
+        reporter.cleanup_input_files()
+    finally:
+        # Возвращаем исходную рабочую директорию
+        os.chdir(original_cwd)
+
     send_file()
-    if os.path.exists(test_config_path):
-        os.remove(test_config_path)
-
 
 
 @pytest.fixture(scope='session', autouse=True)
