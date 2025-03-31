@@ -12,17 +12,10 @@ v.read_in_config()
 def send_file() -> None:
     telegram_bot = TeleBot(v.get("telegram.token"))
 
-    # Проверка, работаем ли в CI
-    if "CI" in os.environ:  # Проверка для CI/CD
-        # Используем переменную окружения GITHUB_WORKSPACE для корректного пути в CI
-        project_root = Path(os.environ.get("GITHUB_WORKSPACE", "/"))
-        file_path = project_root / "tests" / "swagger-coverage-dm-api-account.html"
-    else:
-        # Для локальной среды строим путь относительно текущего файла
-        file_path = current_file_path.parent.parent.parent / "tests" / "swagger-coverage-dm-api-account.html"
-
+    file_path = os.path.join(current_file_path.parent.parent.parent, "tests", "swagger-coverage-dm-api-account.html")
     print(f"Ищем файл: {file_path}")
-    if not file_path.exists():
+
+    if not os.path.exists(file_path):
         raise FileNotFoundError(f"Файл не найден по пути: {file_path}")
 
     print(f"Файл найден: {file_path}")
@@ -32,7 +25,6 @@ def send_file() -> None:
             document=document,
             caption="coverage",
         )
-
 
 if __name__ == '__main__':
     send_file()
