@@ -71,9 +71,9 @@ def setup_swagger_coverage():
     yield
     reporter.generate_report()
     reporter.cleanup_input_files()
-    send_file()
     if os.path.exists(test_config_path):
         os.remove(test_config_path)
+        send_file()
 
 
 
