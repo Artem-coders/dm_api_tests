@@ -24,8 +24,10 @@ pydantic==2.10.6
 pydantic_core==2.27.2
 pydentic==0.0.1.dev3
 PyHamcrest==2.1.0
+pyTelegramBotAPI==4.26.0
 pytest==8.3.5
 pytest-rerunfailures==15.0
+pytest-telegram-notifier==1.4.0
 python-dotenv==1.1.0
 python-stdnum==1.20
 PyYAML==6.0.2

@@ -5,3 +5,9 @@ service:
 user:
   login: "Good_15_03_2025_22_21%S"
   password: "123456789"
+
+
+
+telegram:
+  chat_id: "-1002587246773"
+  token: "7566624472:AAFgG9CVJrcMgtN4_mfjgjI8VIVmxZDnf14"

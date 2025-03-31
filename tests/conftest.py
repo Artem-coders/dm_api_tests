@@ -1,20 +1,21 @@
+import os
 from collections import namedtuple
 from datetime import datetime
-from json import loads
 import random
 import string
 from pathlib import Path
 from swagger_coverage_py.reporter import CoverageReporter
-from requests.auth import HTTPBasicAuth
 import pytest
 
-from helpers.account_helper import AccountHelper, time_it
-from restclient.configuration import Configuration as MailhogConfiguration
-from restclient.configuration import Configuration as DmApiConfiguration
+from helpers.account_helper import AccountHelper
+from packages.notifier.bot import send_file
+from packages.restclient.configuration import Configuration as MailhogConfiguration
+from packages.restclient.configuration import Configuration as DmApiConfiguration
 from services.dm_api_account import DMApiAccount
 from services.api_mailhog import MailHogApi
 import structlog
 from vyper import v
+import shutil
 
 
 structlog.configure(
@@ -31,15 +32,43 @@ options = (
     'service.mailhog',
     'user.login',
     'user.password',
+    'telegram.chat_id',
+    'telegram.token',
+
 )
+
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_swagger_coverage():
-    reporter = CoverageReporter(api_name="dm-api-account", host="http://5.63.153.31:5051")
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    config_path = os.path.join(project_root, "swagger-coverage-config-dm-api-account.json")
+    test_dir = os.getcwd()  # Текущая директория тестов
+    test_config_path = os.path.join(test_dir, "swagger-coverage-config-dm-api-account.json")
+
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(f"Не найден файл конфигурации: {config_path}")
+
+    # Копируем файл в директорию тестов, если его там нет
+    if not os.path.exists(test_config_path):
+        shutil.copy(config_path, test_config_path)
+
+    reporter = CoverageReporter(
+        api_name="dm-api-account",
+        host="http://5.63.153.31:5051"
+    )
+
     reporter.setup("/swagger/Account/swagger.json")
     yield
     reporter.generate_report()
     reporter.cleanup_input_files()
+
+    if os.path.exists(test_config_path):
+        os.remove(test_config_path)
+
+    send_file()
+
+
+
 
 @pytest.fixture(scope='session', autouse=True)
 def set_config(request):
@@ -50,6 +79,10 @@ def set_config(request):
     v.read_in_config()
     for option in options:
         v.set(f"{option}", request.config.getoption(f"--{option}"))
+    os.environ["TELEGRAM_BOT_CHAT_ID"] = v.get("telegram.chat_id")
+    os.environ["TELEGRAM_BOT_ACCESS_TOKEN"] = v.get("telegram.token")
+    request.config.stash["telegram-notifier-addfields"]["environment"] = config_name
+    request.config.stash["telegram-notifier-addfields"]["report"] = "https://artem-coders.github.io/dm_api_tests/"
 
 
 
