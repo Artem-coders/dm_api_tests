@@ -37,18 +37,28 @@ options = (
 
 )
 
+def get_config_path():
+    tests_dir = os.path.dirname(__file__)
+    config_path = os.path.join(tests_dir, "swagger-coverage-config-dm-api-account.json")
+
+    if os.path.exists(config_path):
+        return config_path
+
+    project_root = os.path.abspath(os.path.join(tests_dir, ".."))
+    fallback_path = os.path.join(project_root, "swagger-coverage-config-dm-api-account.json")
+
+    if os.path.exists(fallback_path):
+        return fallback_path
+
+    raise FileNotFoundError(f"Не найден файл конфигурации ни в {config_path}, ни в {fallback_path}")
+
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_swagger_coverage():
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    config_path = os.path.join(project_root, "swagger-coverage-config-dm-api-account.json")
+    config_path = get_config_path()
     test_dir = os.getcwd()  # Текущая директория тестов
     test_config_path = os.path.join(test_dir, "swagger-coverage-config-dm-api-account.json")
 
-    if not os.path.exists(config_path):
-        raise FileNotFoundError(f"Не найден файл конфигурации: {config_path}")
-
-    # Копируем файл в директорию тестов, если его там нет
     if not os.path.exists(test_config_path):
         shutil.copy(config_path, test_config_path)
 
@@ -66,8 +76,6 @@ def setup_swagger_coverage():
         os.remove(test_config_path)
 
     send_file()
-
-
 
 
 @pytest.fixture(scope='session', autouse=True)
