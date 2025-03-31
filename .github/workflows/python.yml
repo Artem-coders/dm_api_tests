@@ -46,7 +46,7 @@ jobs:
       - name: Run tests with retry
         run: |
           export JAVA_HOME=$JAVA_HOME
-          RETRY_LIMIT=5
+          RETRY_LIMIT=3
           COUNT=0
           pytest ./tests --alluredir=allure-results --disable-warnings || FAILED=true
           

@@ -108,10 +108,11 @@ class AccountHelper:
 
         json_data = {"login": login, "email": email}
         # Сбрасываем пароль
+        time.sleep(1)
         self.dm_account_api.account_api.post_v1_account_password(
             json_data=json_data, validate_response=False
         )
-
+        time.sleep(1)
         token = self.get_token_by_password(login=login)
 
         json_data = {
