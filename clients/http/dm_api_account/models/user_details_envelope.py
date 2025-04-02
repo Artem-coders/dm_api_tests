@@ -1,6 +1,6 @@
 from __future__ import annotations
-from dm_api_account.models.user_envelope import UserRole, Rating
-from typing import List, Optional
+from clients.http.dm_api_account.models.user_envelope import UserRole, Rating
+from typing import List
 from pydantic import BaseModel, Field, ConfigDict
 
 

@@ -2,13 +2,11 @@ from requests import session, JSONDecodeError
 import structlog
 import uuid
 import curlify
-from requests.auth import HTTPBasicAuth
-from swagger_coverage_py.listener import CoverageListener
 from swagger_coverage_py.request_schema_handler import RequestSchemaHandler
 from swagger_coverage_py.uri import URI
 
-from restclient.configuration import Configuration
-from restclient.utilites import allure_attach
+from packages.restclient.configuration import Configuration
+from packages.restclient.utilites import allure_attach
 
 
 class RestClient:

@@ -1,13 +1,10 @@
-import random
-import string
 import time
-from collections import namedtuple
 from json import loads
 
 import allure
 
-from dm_api_account.models.login_credentials import LoginCredentials
-from dm_api_account.models.registration import Registration
+from clients.http.dm_api_account.models.login_credentials import LoginCredentials
+from clients.http.dm_api_account.models.registration import Registration
 from services.dm_api_account import DMApiAccount
 from services.api_mailhog import MailHogApi
 from retrying import retry
@@ -111,10 +108,11 @@ class AccountHelper:
 
         json_data = {"login": login, "email": email}
         # Сбрасываем пароль
+        time.sleep(1)
         self.dm_account_api.account_api.post_v1_account_password(
             json_data=json_data, validate_response=False
         )
-
+        time.sleep(1)
         token = self.get_token_by_password(login=login)
 
         json_data = {
